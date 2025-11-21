@@ -6,11 +6,10 @@ const isLocalhost = window.location.hostname === 'localhost' ||
                     window.location.hostname === '127.0.0.1' ||
                     window.location.hostname === ''
 
-// Use environment variable first, then fallback to hardcoded values
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
-                     (isLocalhost
+// ALWAYS use runtime detection (don't rely on build-time env vars)
+const API_BASE_URL = isLocalhost
                        ? 'http://localhost:8000/api'
-                       : 'https://ofdautocall.onrender.com/api')
+                       : 'https://ofdautocall.onrender.com/api'
 
 console.log('[Config] Hostname:', window.location.hostname)
 console.log('[Config] Is Localhost:', isLocalhost)
