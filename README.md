@@ -40,6 +40,49 @@ Intransit/
 
 ## Setup Instructions
 
+### 🔐 Environment Variables Setup (IMPORTANT!)
+
+**⚠️ NEVER commit .env files to git! They contain sensitive API keys.**
+
+#### Backend Environment Variables:
+
+1. Copy the example file:
+```bash
+cd backend
+cp .env.example .env
+```
+
+2. Edit `.env` and add your real API keys:
+```bash
+# Get these from your iThink Logistics account
+ITHINK_ACCESS_TOKEN=your_actual_token_here
+ITHINK_SECRET_KEY=your_actual_secret_here
+
+# Get these from your VAPI.ai account
+VAPI_PRIVATE_KEY=your_vapi_private_key
+VAPI_PHONE_NUMBER_ID=your_phone_number_id
+VAPI_ASSISTANT_ID=your_assistant_id
+```
+
+#### Frontend Environment Variables:
+
+1. Copy the example file:
+```bash
+cd frontend
+cp .env.example .env
+```
+
+2. Edit `.env` with your backend URL:
+```bash
+# For local development
+VITE_API_BASE_URL=http://localhost:8000/api
+
+# For production (Render)
+# VITE_API_BASE_URL=https://your-backend.onrender.com/api
+```
+
+---
+
 ### Backend Setup (Django)
 
 1. Navigate to backend directory:
