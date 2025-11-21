@@ -7,7 +7,7 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Security Settings - MUST use environment variables in production
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-change-this-in-production')
+SECRET_KEY = os.getenv('SECRET_KEY') or os.getenv('DJANGO_SECRET_KEY', 'django-insecure-change-this-in-production')
 
 # DEBUG should be False in production
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
@@ -100,17 +100,25 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS Settings - More secure configuration
 # Set CORS_ALLOW_ALL_ORIGINS=True only in development
-CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', 'True') == 'True'
+CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', 'False') == 'True'
 CORS_ALLOW_CREDENTIALS = True
+
+# Get CORS_ALLOWED_ORIGINS from environment variable (comma-separated)
+cors_origins_env = os.getenv('CORS_ALLOWED_ORIGINS', '')
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'http://localhost:5173',
-    'https://4625adca3de7.ngrok-free.app',
+    'https://ofdautocall.netlify.app',  # Production frontend
 ]
+# Add custom origins from environment variable
+if cors_origins_env:
+    CORS_ALLOWED_ORIGINS.extend([origin.strip() for origin in cors_origins_env.split(',') if origin.strip()])
+
 # Allow all ngrok domains for easier development
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https://.*\.ngrok-free\.app$",
     r"^https://.*\.ngrok\.io$",
+    r"^https://.*\.netlify\.app$",  # Allow all Netlify apps
 ]
 CORS_ALLOW_HEADERS = [
     'accept',
