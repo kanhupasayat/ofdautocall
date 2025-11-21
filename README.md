@@ -110,10 +110,16 @@ copy .env.example .env
 ```
 
 5. Update `.env` with your iThink API credentials:
-```
-ITHINK_ACCESS_TOKEN=7f9681a8addceb09d2223cb6c3e6bd85
-ITHINK_SECRET_KEY=87c5cd46a2cd59209d2153da8a074a73
-ITHINK_API_URL=https://api.ithinklogistics.com/api_v3/order/track.json
+```bash
+# Get these from https://my.ithinklogistics.com
+ITHINK_ACCESS_TOKEN=your_access_token_here
+ITHINK_SECRET_KEY=your_secret_key_here
+ITHINK_PLATFORM_ID=2
+
+# VAPI credentials from https://dashboard.vapi.ai
+VAPI_PRIVATE_KEY=your_vapi_private_key_here
+VAPI_PHONE_NUMBER_ID=your_phone_number_id_here
+VAPI_ASSISTANT_ID=your_assistant_id_here
 ```
 
 6. Run migrations:
