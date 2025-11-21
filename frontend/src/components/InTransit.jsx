@@ -3,7 +3,7 @@ import axios from 'axios'
 import * as XLSX from 'xlsx'
 import './InTransit.css'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://ofdautocall.onrender.com/api'
 
 // Configure axios to skip ngrok browser warning
 axios.defaults.headers.common['ngrok-skip-browser-warning'] = 'true'
