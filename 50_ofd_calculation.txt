@@ -1,0 +1,196 @@
+================================================================================
+        API CALL CALCULATION - 50 OFD ORDERS (EXACT COUNT)
+================================================================================
+
+📦 ASSUMPTION: 50 OFD Orders in database
+
+================================================================================
+⏰ MORNING - 9:45 AM to 10:30 AM
+================================================================================
+
+9:45 AM - Daily Cleanup
+   ✗ Delete all data from database
+   API Calls: 0
+
+9:50 AM - First user opens OFD page (or scheduler pre-sync)
+   ✓ No data in DB, fetch from iThink
+   
+   API Call #1: get_orders_by_date_range(last 7 days)
+      → Returns all orders (OFD, Undelivered, Delivered, etc.)
+      → Filter: 50 OFD/Undelivered orders
+      → Save to database
+   
+   API Call #2-3: track_orders() for phone numbers
+      → Batch 1: 30 AWBs
+      → Batch 2: 20 AWBs (remaining)
+      → Get phone numbers for all 50 orders
+   
+   TOTAL: 3 API calls (iThink)
+
+================================================================================
+⏰ 10:30 AM - First Call Session
+================================================================================
+
+Scheduler runs make_calls_to_pending_orders():
+   
+   Step 1: Sync fresh data
+      API Call #4: get_orders_by_date_range()
+         → Refresh OFD data (50 orders updated)
+   
+   Step 2: Get phone numbers (if missing)
+      → Check cache (10 min cache)
+      → If phones already fetched at 9:50 AM, SKIP!
+      → If cache expired or missing phones:
+         API Call #5-6: track_orders()
+            → Batch 1: 30 AWBs
+            → Batch 2: 20 AWBs
+      
+      LIKELY: 0 calls (cache hit from 9:50 AM)
+   
+   Step 3: Make VAPI calls to 50 customers
+      API Call #7-56: VAPI create_phone_call()
+         → 50 VAPI calls (one per order)
+   
+   TOTAL: 1 iThink + 50 VAPI calls
+
+================================================================================
+⏰ 11:00 AM - Second Call Session
+================================================================================
+
+Scheduler runs again:
+   
+   Step 1: Sync fresh data
+      API Call #57: get_orders_by_date_range()
+         → Refresh data
+   
+   Step 2: Get phones
+      → Cache still valid (10 min) - SKIP!
+      API Calls: 0
+   
+   Step 3: Get pending calls
+      → Filter: Orders not successfully called yet
+      → Example: 30 orders failed/need retry
+   
+   Step 4: Make VAPI calls
+      API Call #58-87: VAPI create_phone_call()
+         → 30 VAPI calls (to failed/retry orders)
+   
+   TOTAL: 1 iThink + 30 VAPI calls
+
+================================================================================
+⏰ 12:00 PM - Third Call Session
+================================================================================
+
+Same as 11 AM session:
+   
+   API Call #88: get_orders_by_date_range()
+   API Call #89-98: VAPI calls (10 remaining orders)
+   
+   TOTAL: 1 iThink + 10 VAPI calls
+
+================================================================================
+⏰ 1:00 PM - Fourth (Last) Call Session
+================================================================================
+
+Same pattern:
+   
+   API Call #99: get_orders_by_date_range()
+   API Call #100-104: VAPI calls (5 retry orders)
+   
+   TOTAL: 1 iThink + 5 VAPI calls
+
+================================================================================
+⏰ 1:30 PM - API Calls STOP
+================================================================================
+
+After 1:30 PM: NO MORE API CALLS!
+   - User opens OFD page → Database only (instant)
+   - No sync, no phone lookups
+
+================================================================================
+
+📊 THROUGHOUT THE DAY - User Activity
+================================================================================
+
+Call History API (VAPI):
+   - Fetched every 5 minutes (cached)
+   - Calls per hour: 12
+   - Total hours active (10:30 AM - 2 PM): 3.5 hours
+   - Total: 12 × 3.5 = 42 calls
+   
+   But cache reduces actual calls:
+   - Actual API calls: ~10-15 (cache hits)
+
+OFD Page Refreshes:
+   - Database cache (instant response)
+   - Sync every 2 hours (within working hours)
+   
+   Example:
+   - 10:30 AM sync (scheduler)
+   - 12:30 PM sync (2 hours later)
+   
+   API Call #105: get_orders_by_date_range()
+   API Call #106-107: track_orders() (if phones expired)
+   
+   TOTAL: 1-3 calls
+
+================================================================================
+
+🎯 FINAL COUNT - 50 OFD ORDERS
+================================================================================
+
+iThink API Calls:
+==================
+Morning sync (9:50 AM):          3 calls
+Call session syncs (4 times):    4 calls
+User page refresh (1-2 times):   1-3 calls
+--------------------------------
+TOTAL iThink:                    8-10 calls ✅
+
+
+VAPI API Calls:
+==================
+First session (10:30 AM):        50 calls
+Second session (11:00 AM):       30 calls (retries)
+Third session (12:00 PM):        10 calls (retries)
+Fourth session (1:00 PM):        5 calls (retries)
+Call history checks:             10-15 calls
+--------------------------------
+TOTAL VAPI:                      105-110 calls ✅
+
+
+GRAND TOTAL (50 OFD Orders):
+==========================================
+iThink API:     8-10 calls
+VAPI API:       105-110 calls
+==========================================
+TOTAL:          115-120 API calls per day ✅
+
+================================================================================
+
+💡 BREAKDOWN BY PURPOSE:
+================================================================================
+
+1. Data Sync (iThink):           8-10 calls
+2. Make Customer Calls (VAPI):   95 calls (50 + 30 + 10 + 5)
+3. Call History (VAPI):          10-15 calls
+
+================================================================================
+
+🔥 KEY OPTIMIZATIONS APPLIED:
+================================================================================
+
+✅ Phone cache (10 min) → Saves 12-16 track_orders calls
+✅ Database cache → OFD page instant (no API)
+✅ Call history cache (5 min) → Reduces from 84 to 15 calls
+✅ Working hours limit → No calls after 1:30 PM
+✅ 2-hour sync interval → Instead of every 30 min
+✅ Batch processing → 30 AWBs per track_orders call
+✅ Smart call filtering → Only call pending/retry orders
+
+Without optimization, it would be: 300+ API calls! 🚨
+With optimization: 115-120 API calls ✅
+
+SAVINGS: ~60-65% reduction! 🎉
+
+================================================================================

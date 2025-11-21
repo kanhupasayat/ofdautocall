@@ -1,0 +1,132 @@
+================================================================================
+                    API CALL SUMMARY - INTRANSIT BACKEND
+================================================================================
+
+📊 FRONTEND ENDPOINTS (User requests):
+================================================================================
+
+1️⃣ GET /api/orders/ofd/ 
+   Purpose: Show OFD & Undelivered orders
+   Calls iThink API: 
+      - get_orders_by_date_range() [First time only or after 2hr]
+      - track_orders() [For phone numbers, batch of 30]
+   Cache: Database cache (instant response)
+   Working Hours: 9:50 AM - 1:30 PM only
+   Sync Frequency: Every 2 hours (if within working hours)
+
+2️⃣ GET /api/orders/call-history/
+   Purpose: Show today's call history
+   Calls iThink API: NO
+   Calls VAPI API: YES (to get call list)
+   Cache: 5 minutes
+   
+3️⃣ GET /api/orders/in-transit/
+   Purpose: Show delayed in-transit orders
+   Calls iThink API:
+      - get_orders_by_date_range() [Every time]
+      - track_orders() [For verification, batch of 30]
+   Cache: 15 minutes
+   
+4️⃣ GET /api/orders/ready-to-dispatch/
+   Purpose: Show ready to dispatch orders
+   Calls iThink API:
+      - get_orders_by_date_range() [Every time]
+      - track_orders() [For verification, batch of 30]
+   Cache: 15 minutes
+
+5️⃣ POST /api/orders/make-call/
+   Purpose: Make individual call to customer
+   Calls VAPI API: YES (create phone call)
+   
+6️⃣ GET /api/orders/scheduler/
+   Purpose: Get scheduler status
+   Calls API: NO (internal status only)
+
+7️⃣ POST /api/orders/cleanup-delivered/
+   Purpose: Manual cleanup of delivered orders
+   Calls iThink API:
+      - track_orders() [Batch of 30, for all orders]
+   
+================================================================================
+
+🤖 AUTOMATIC/SCHEDULED CALLS:
+================================================================================
+
+8️⃣ Scheduler Auto-Sync (Before each call session)
+   When: Before 10:30, 11, 12, 1 PM calls
+   Calls iThink API:
+      - get_orders_by_date_range() [To get fresh OFD/Undelivered]
+      - track_orders() [For phone numbers]
+   
+9️⃣ Scheduler Calls (4 times daily)
+   When: 10:30 AM, 11 AM, 12 PM, 1 PM
+   Calls VAPI API: YES (make calls to pending orders)
+   Smart filtering: 2-hour cooldown, max 3 retries
+
+🔟 Daily Cleanup
+   When: 9:45 AM
+   Calls API: NO (just deletes local database)
+
+================================================================================
+
+📈 ITHINK API CALL BREAKDOWN:
+================================================================================
+
+API: get_orders_by_date_range(start_date, end_date)
+Used by:
+   - OFD Orders (every 2 hours during working hours)
+   - In-Transit (every 15 min via cache)
+   - Ready to Dispatch (every 15 min via cache)
+   - Scheduler (before each call session)
+
+API: track_orders(awb_list)
+Used by:
+   - OFD Orders (for phone numbers, cached 10 min)
+   - In-Transit (for verification, batch of 30)
+   - Ready to Dispatch (for verification, batch of 30)
+   - Cleanup (batch of 30)
+   - Scheduler (for phone numbers)
+
+================================================================================
+
+⏰ DAILY TIMELINE (What happens when):
+================================================================================
+
+9:45 AM  → 🗑️ Auto Cleanup (delete all data)
+9:50 AM  → 🟢 API calls allowed to start
+10:30 AM → 📞 Call session 1 + Fresh sync
+11:00 AM → 📞 Call session 2 + Fresh sync  
+12:00 PM → 📞 Call session 3 + Fresh sync
+1:00 PM  → 📞 Call session 4 + Fresh sync
+1:30 PM  → 🔴 API calls STOP (no more syncs)
+
+Throughout day:
+- Frontend polling (every 30 seconds during calls, else 30 min)
+- Cache hits reduce actual API calls
+- Working hours: 9:50 AM - 1:30 PM
+
+================================================================================
+
+💾 CACHE STRATEGY:
+================================================================================
+
+1. OFD Orders: Database cache (instant) + 2hr sync
+2. Call History: 5 min cache
+3. Phone Numbers: 10 min cache
+4. In-Transit: 15 min cache
+5. Ready to Dispatch: 15 min cache
+
+================================================================================
+
+🎯 OPTIMIZATION DONE:
+================================================================================
+
+✅ Working hours restriction (9:50 AM - 1:30 PM)
+✅ 2-hour sync interval (was 30 min)
+✅ 10-min phone cache
+✅ 5-min call history cache  
+✅ Database caching for instant response
+✅ Batch processing (30 AWBs per call)
+✅ Smart call filtering (2hr cooldown)
+
+================================================================================
