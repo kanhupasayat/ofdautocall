@@ -520,7 +520,12 @@ class OFDOrdersView(APIView):
                     else:
                         print(f"[OFD] No tracking data for AWB: {awb}")
             else:
-                print(f"[OFD] Batch {i//batch_size + 1} tracking failed: {track_result.get('error', 'Unknown error')}")
+                error_msg = track_result.get('error', 'Unknown error')
+                status_code = track_result.get('status_code', 'N/A')
+                print(f"[OFD] Batch {i//batch_size + 1} tracking failed:")
+                print(f"[OFD]   Error: {error_msg}")
+                print(f"[OFD]   Status Code: {status_code}")
+                print(f"[OFD]   Full Response: {track_result}")
 
         print(f"[OFD] Final results: Total={len(ofd_undelivered_orders)}, OFD={ofd_count}, Undelivered={undelivered_count}")
 

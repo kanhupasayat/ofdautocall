@@ -82,8 +82,27 @@ class IThinkService:
             response = requests.post(settings.ITHINK_API_URL, json=payload, timeout=60)
             response.raise_for_status()
             return response.json()
+        except requests.exceptions.HTTPError as e:
+            # HTTP error (4xx, 5xx)
+            error_detail = {
+                "error": f"HTTP {e.response.status_code}: {e.response.reason}",
+                "status_code": e.response.status_code,
+                "response_text": e.response.text[:500] if hasattr(e.response, 'text') else "No response text"
+            }
+            print(f"[IThink API] HTTP Error: {error_detail}")
+            return error_detail
+        except requests.exceptions.Timeout as e:
+            error_detail = {"error": "Request timeout - API took too long to respond", "status_code": 408}
+            print(f"[IThink API] Timeout Error: {error_detail}")
+            return error_detail
+        except requests.exceptions.ConnectionError as e:
+            error_detail = {"error": f"Connection error - Could not reach API: {str(e)}", "status_code": 503}
+            print(f"[IThink API] Connection Error: {error_detail}")
+            return error_detail
         except requests.exceptions.RequestException as e:
-            return {"error": str(e), "status_code": 500}
+            error_detail = {"error": f"Request failed: {str(e)}", "status_code": 500}
+            print(f"[IThink API] General Error: {error_detail}")
+            return error_detail
 
     @staticmethod
     def get_ready_to_dispatch_orders(awb_numbers):
