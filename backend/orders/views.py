@@ -157,9 +157,9 @@ class InTransitView(APIView):
     """
 
     def get(self, request):
-        # Get last 10 days orders
+        # Get last 5 days orders (reduced from 10 to prevent timeout/memory issues)
         end_date = datetime.now().strftime('%Y-%m-%d')
-        start_date = (datetime.now() - timedelta(days=10)).strftime('%Y-%m-%d')
+        start_date = (datetime.now() - timedelta(days=5)).strftime('%Y-%m-%d')
         today = datetime.now().date()
 
         # Check if user wants verified (filtered) data
@@ -424,9 +424,9 @@ class OFDOrdersView(APIView):
         # STEP 2: If database is empty, fall back to API (old logic)
         print(f"[OFD] Database empty - fetching from iThink API...")
 
-        # Get last 10 days orders
+        # Get last 5 days orders (reduced from 10 to prevent timeout/memory issues)
         end_date = datetime.now().strftime('%Y-%m-%d')
-        start_date = (datetime.now() - timedelta(days=10)).strftime('%Y-%m-%d')
+        start_date = (datetime.now() - timedelta(days=5)).strftime('%Y-%m-%d')
 
         print(f"[OFD] Fetching orders from {start_date} to {end_date}")
         orders_result = IThinkService.get_orders_by_date_range(start_date, end_date)
