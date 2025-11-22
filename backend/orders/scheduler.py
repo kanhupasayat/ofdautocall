@@ -462,11 +462,11 @@ class AutoCallScheduler:
             time.sleep(60)  # Check every minute
 
     def cleanup_daily_data(self):
-        """Delete all orders and call history - Fresh start every morning at 9:45 AM"""
+        """Delete all orders and call history - Fresh start every night at 11:00 PM"""
         from django.core.cache import cache
 
         print("\n" + "="*70)
-        print("DAILY CLEANUP - 9:45 AM")
+        print("DAILY CLEANUP - 11:00 PM")
         print("="*70)
 
         # Delete ALL call history
@@ -484,7 +484,7 @@ class AutoCallScheduler:
         print(f"✓ Deleted {call_deleted} call history records")
         print(f"✓ Cleared all cache (OFD orders, call history, etc.)")
         print(f"✓ Fresh start! Ready for new day")
-        print(f"   Next cleanup: Tomorrow 9:45 AM")
+        print(f"   Next cleanup: Tomorrow 11:00 PM")
         print("="*70 + "\n")
 
     def extract_missing_recordings(self):
@@ -544,8 +544,8 @@ class AutoCallScheduler:
 
         schedule.clear()
 
-        # Schedule daily cleanup at 9:45 AM
-        schedule.every().day.at("09:45").do(self.cleanup_daily_data)
+        # Schedule daily cleanup at 11:00 PM (night time to avoid data loss during working hours)
+        schedule.every().day.at("23:00").do(self.cleanup_daily_data)
 
         # Pre-sync jobs: 10 minutes before each call session
         # This fetches fresh OFD/Undelivered data before calls start
@@ -569,7 +569,7 @@ class AutoCallScheduler:
         self.thread.start()
 
         print(f"[OK] Hourly Auto Call Scheduler Started")
-        print(f"   Daily cleanup: 9:45 AM (auto delete all data)")
+        print(f"   Daily cleanup: 11:00 PM (auto delete all data)")
         print(f"   Pre-sync times: 10:20 AM, 10:50 AM, 11:50 AM, 12:50 PM (10 min before calls)")
         print(f"   Calling times: 10:30 AM, 11:00 AM, 12:00 PM, 1:00 PM (4 sessions)")
         print(f"   Recording extraction: Every 10 minutes (auto-extract missing recordings)")
@@ -613,7 +613,7 @@ class AutoCallScheduler:
         return {
             'running': self.running,
             'mode': 'hourly' if self.hourly_mode else 'single',
-            'cleanup_time': '09:45',  # Daily cleanup at 9:45 AM
+            'cleanup_time': '23:00',  # Daily cleanup at 11:00 PM
             'scheduled_times': ['10:30', '11:00', '12:00', '13:00'] if self.hourly_mode else [],
             'next_runs': next_runs,
             'current_time': datetime.now().strftime('%H:%M:%S'),
