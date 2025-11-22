@@ -18,6 +18,38 @@ class OrdersConfig(AppConfig):
         # Start scheduler in production (gunicorn) and development
         # Skip only in Django's auto-reloader process
         if os.environ.get('RUN_MAIN') != 'false':
+            # Check database configuration
+            def check_database_config():
+                from django.conf import settings
+
+                print("\n" + "="*70)
+                print("Database Configuration Check:")
+                print("="*70)
+
+                database_url = os.environ.get('DATABASE_URL')
+                db_engine = settings.DATABASES['default']['ENGINE']
+
+                if database_url:
+                    print(f"✅ DATABASE_URL is set: {database_url[:30]}...")
+                else:
+                    print("❌ DATABASE_URL is NOT set!")
+                    print("⚠️  WARNING: Using SQLite fallback - data will be lost on restart!")
+
+                if 'sqlite' in db_engine:
+                    print(f"⚠️  WARNING: Using SQLite database: {db_engine}")
+                    print("⚠️  This is OK for development, but NOT for production!")
+                    print("⚠️  All data will be LOST when the server restarts!")
+                    if not database_url:
+                        print("")
+                        print("To fix this in production:")
+                        print("1. Create PostgreSQL database on Render")
+                        print("2. Connect it to your web service")
+                        print("3. Redeploy the application")
+                else:
+                    print(f"✅ Using production database: {db_engine}")
+
+                print("="*70 + "\n")
+
             # Check VAPI environment variables
             def check_vapi_credentials():
                 vapi_private_key = os.environ.get('VAPI_PRIVATE_KEY')
@@ -68,7 +100,10 @@ class OrdersConfig(AppConfig):
                 auto_call_scheduler.start_hourly_scheduler()
                 print("[STARTUP] ✅ Auto Call Scheduler started automatically!")
 
-            # Check VAPI credentials first
+            # Check database configuration first
+            check_database_config()
+
+            # Check VAPI credentials
             check_vapi_credentials()
 
             # Create superuser (quick operation)
