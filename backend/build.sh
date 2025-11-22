@@ -35,6 +35,10 @@ echo "Running migrations..."
 python manage.py migrate --no-input
 
 echo ""
+echo "Verifying database tables..."
+python manage.py showmigrations orders
+
+echo ""
 echo "========================================"
 echo "Build complete!"
 echo "========================================"
