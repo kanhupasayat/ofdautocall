@@ -881,11 +881,20 @@ class SchedulerControlView(APIView):
 
         elif action == 'run_now':
             # Run immediately
-            auto_call_scheduler.make_calls_to_all_orders()
-            return Response({
-                'message': 'Manual call run completed',
-                'status': auto_call_scheduler.get_status()
-            }, status=status.HTTP_200_OK)
+            try:
+                auto_call_scheduler.make_calls_to_pending_orders()
+                return Response({
+                    'message': 'Manual call run completed',
+                    'status': auto_call_scheduler.get_status()
+                }, status=status.HTTP_200_OK)
+            except Exception as e:
+                import traceback
+                error_detail = traceback.format_exc()
+                print(f"[ERROR] Manual call run failed: {error_detail}")
+                return Response({
+                    'error': f'Failed to run calls: {str(e)}',
+                    'detail': error_detail
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         else:
             return Response(
