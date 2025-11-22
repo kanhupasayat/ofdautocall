@@ -8,9 +8,16 @@ class OrdersConfig(AppConfig):
     def ready(self):
         """Start scheduler automatically when Django app starts"""
         import os
-        # Only run in main process (not in reloader)
-        if os.environ.get('RUN_MAIN') == 'true' or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        import sys
+
+        # Prevent running during migrations or in secondary processes
+        if 'migrate' in sys.argv or 'makemigrations' in sys.argv:
+            return
+
+        # Start scheduler in production (gunicorn) and development
+        # Skip only in Django's auto-reloader process
+        if os.environ.get('RUN_MAIN') != 'false':
             from .scheduler import auto_call_scheduler
             # Start scheduler automatically in hourly mode
             auto_call_scheduler.start_hourly_scheduler()
-            print("[STARTUP] Auto Call Scheduler started automatically!")
+            print("[STARTUP] ✅ Auto Call Scheduler started automatically!")
