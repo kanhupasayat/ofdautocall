@@ -476,7 +476,7 @@ class OFDOrdersView(APIView):
         ofd_undelivered_orders = []
         ofd_count = 0
         undelivered_count = 0
-        batch_size = 25  # Increased from 10 to 25 for fewer API calls
+        batch_size = 10  # iThink API limit: Maximum 10 AWBs per tracking request
 
         print(f"[OFD] Starting to track {len(all_orders)} orders in batches of {batch_size}")
 

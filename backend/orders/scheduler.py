@@ -229,7 +229,7 @@ class AutoCallScheduler:
             print(f"[SYNC] {msg}")
             self.add_log(msg, 'warning')
 
-            batch_size = 30
+            batch_size = 10  # iThink API limit: Maximum 10 AWBs per tracking request
             for i in range(0, len(awbs_to_track), batch_size):
                 batch = awbs_to_track[i:i + batch_size]
                 msg = f"📡 API Call: Track API - Batch {i//batch_size + 1} ({len(batch)} AWBs)"
