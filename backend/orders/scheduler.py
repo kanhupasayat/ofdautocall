@@ -389,6 +389,11 @@ class AutoCallScheduler:
 
             result = VAPIService.make_ofd_call(phone_number, call_data)
 
+            # DEBUG: Log full VAPI response
+            print(f"[VAPI RESPONSE] Full response: {result}")
+            print(f"[VAPI RESPONSE] Has 'id'? {('id' in result)}")
+            print(f"[VAPI RESPONSE] Call ID: {result.get('id', 'MISSING!')}")
+
             if "error" in result:
                 msg = f"❌ Call failed for {call_data['awb']}: {result.get('error')}"
                 print(f"   [FAIL] {msg}")
@@ -398,8 +403,19 @@ class AutoCallScheduler:
                 self.current_session['completed'] += 1
                 continue
 
+            # Check if call_id exists
+            if not result.get('id'):
+                msg = f"❌ VAPI response missing 'id' field for {call_data['awb']}"
+                print(f"   [FAIL] {msg}")
+                self.add_log(msg, 'error')
+                failed_count += 1
+                self.current_session['failed'] = failed_count
+                self.current_session['completed'] += 1
+                continue
+
             # Save to database with retry count
-            msg = f"💾 Saving call record to database..."
+            msg = f"💾 Saving call record to database (Call ID: {result.get('id')[:12]}...)"
+            print(f"[DB] {msg}")
             self.add_log(msg, 'info')
 
             try:
@@ -424,6 +440,7 @@ class AutoCallScheduler:
                     call_started_at=parse_datetime(result.get('createdAt')) if result.get('createdAt') else None,
                     vapi_response=result
                 )
+                print(f"[DB] ✅ CallHistory record created successfully in database!")
                 msg = f"✅ Call successful: {call_data['awb']} | Call ID: {result.get('id')[:12]}... | Cost: ${result.get('cost', 0)}"
                 print(f"   [OK] {msg}")
                 self.add_log(msg, 'success')
@@ -431,8 +448,11 @@ class AutoCallScheduler:
                 self.current_session['successful'] = success_count
                 self.current_session['completed'] += 1
             except Exception as e:
-                msg = f"Error saving {call_data['awb']}: {str(e)}"
-                print(f"   [FAIL] {msg}")
+                import traceback
+                error_traceback = traceback.format_exc()
+                msg = f"❌ Database save FAILED for {call_data['awb']}: {str(e)}"
+                print(f"   [DB ERROR] {msg}")
+                print(f"   [DB ERROR] Full traceback:\n{error_traceback}")
                 self.add_log(msg, 'error')
                 failed_count += 1
                 self.current_session['failed'] = failed_count

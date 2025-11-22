@@ -18,6 +18,37 @@ class OrdersConfig(AppConfig):
         # Start scheduler in production (gunicorn) and development
         # Skip only in Django's auto-reloader process
         if os.environ.get('RUN_MAIN') != 'false':
+            # Check VAPI environment variables
+            def check_vapi_credentials():
+                vapi_private_key = os.environ.get('VAPI_PRIVATE_KEY')
+                vapi_phone_id = os.environ.get('VAPI_PHONE_NUMBER_ID')
+                vapi_assistant_id = os.environ.get('VAPI_ASSISTANT_ID')
+
+                print("\n" + "="*70)
+                print("VAPI Credentials Check:")
+                print("="*70)
+
+                if vapi_private_key:
+                    print(f"✅ VAPI_PRIVATE_KEY: {vapi_private_key[:10]}...")
+                else:
+                    print("❌ VAPI_PRIVATE_KEY: MISSING!")
+
+                if vapi_phone_id:
+                    print(f"✅ VAPI_PHONE_NUMBER_ID: {vapi_phone_id[:10]}...")
+                else:
+                    print("❌ VAPI_PHONE_NUMBER_ID: MISSING!")
+
+                if vapi_assistant_id:
+                    print(f"✅ VAPI_ASSISTANT_ID: {vapi_assistant_id[:10]}...")
+                else:
+                    print("❌ VAPI_ASSISTANT_ID: MISSING!")
+
+                print("="*70 + "\n")
+
+                if not all([vapi_private_key, vapi_phone_id, vapi_assistant_id]):
+                    print("⚠️  WARNING: Some VAPI credentials are missing!")
+                    print("⚠️  Calls will FAIL without proper credentials!")
+
             # Create superuser if it doesn't exist
             def create_superuser_if_needed():
                 try:
@@ -37,7 +68,10 @@ class OrdersConfig(AppConfig):
                 auto_call_scheduler.start_hourly_scheduler()
                 print("[STARTUP] ✅ Auto Call Scheduler started automatically!")
 
-            # Create superuser first (quick operation)
+            # Check VAPI credentials first
+            check_vapi_credentials()
+
+            # Create superuser (quick operation)
             create_superuser_if_needed()
 
             # Run scheduler in daemon thread so it doesn't block gunicorn startup
